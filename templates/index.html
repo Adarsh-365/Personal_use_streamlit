@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+
+{% block tree_view %}
+
+                  
+{% endblock tree_view %}
+
+                  <ul>
+                      <li>
+                          <span class="toggle" data-bs-toggle="collapse" data-bs-target="#folder1">
+                              📁 Folder 1
+                          </span>
+                          <ul id="folder1" class="collapse">
+                              <li>📄 File 1.1</li>
+                              <li>
+                                  <span class="toggle" data-bs-toggle="collapse" data-bs-target="#subfolder1">
+                                      📁 Subfolder 1.1
+                                  </span>
+                                  <ul id="subfolder1" class="collapse">
+                                      <li>📄 File 1.1.1</li>
+                                      <li>📄 File 1.1.2</li>
+                                  </ul>
+                              </li>
+                              <li>📄 File 1.2</li>
+                          </ul>
+                      </li>
+                      <li>
+                          <span class="toggle" data-bs-toggle="collapse" data-bs-target="#folder2">
+                              📁 Folder 2
+                          </span>
+                          <ul id="folder2" class="collapse">
+                              <li>📄 File 2.1</li>
+                              <li>📄 File 2.2</li>
+                          </ul>
+                      </li>
+                      <li>📄 File 3</li>
+                  </ul>  
+
+
+
+
+<!-- Relocated Submit Button Outside the Form -->
+ {% block runbutton %}
+<div id="button-container">
+    <button type="button" class="run-button">▶</button>
+</div>
+{% endblock runbutton %}
+{% block mainContent %}
+
+{% comment %} <h1>{{data}}</h1> {% endcomment %}
+<form id="pythonForm">
+    {% csrf_token %}
+    <div id="editor-container" style="height:90px;"></div>
+    <textarea id="code-editor" class="code-editor" name="code" style="Display: none;" ></textarea>
+</form>  
+
+
+
+<script>
+    // Initialize CodeMirror
+    const val = '{{ data|escapejs }}';
+    const editor = CodeMirror(document.getElementById('editor-container'), {
+        mode: 'python',
+        theme: 'dracula',
+        value : val ,
+        lineNumbers: true,
+        indentUnit: 4,           // Python standard 4-space indentation
+        smartIndent: true,       // Enable smart indentation
+        tabSize: 4, 
+    });
+
+    // Handle button click to manually submit the form
+    document.querySelector("#button-container .run-button").addEventListener("click", function() {
+        // Sync CodeMirror content to the hidden textarea inside the form
+        document.getElementById("code-editor").value = editor.getValue();
+
+        // Prevent form submission and use AJAX instead
+        event.preventDefault(); // Prevent form from reloading the page
+
+        // Create FormData from the form element
+        const formData = new FormData(document.getElementById("pythonForm"));
+
+        // Send the form data via fetch
+        fetch("", {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest", // Indicate AJAX request
+            },
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Display server response in output div
+            document.getElementById("output").textContent = data.output;
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            document.getElementById("output").textContent = "An error occurred.";
+        });
+    });
+</script>
+
+{% endblock mainContent %}
+
+{% block outputblock %}
+<div class="terminal-container">
+    <textarea id="output" class="terminal" placeholder="Type your command here..."></textarea>
+</div>
+{% endblock outputblock %}
